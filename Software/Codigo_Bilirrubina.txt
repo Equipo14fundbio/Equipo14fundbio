@@ -1,0 +1,33 @@
+//////DETECTOR DE BILIRRUBINA//////
+
+const int pinEntrada = A0;
+const int pinEntrada_1 = A1;
+const int pinEntrada_2 = A2;
+float sensor = 0;
+float sensor_1 = 0;
+float sensor_2 = 0;
+
+void setup()
+{
+  Serial.begin(9600);
+}
+
+void loop()
+{
+  
+  //Luz roja
+  sensor = analogRead(pinEntrada);
+  Serial.print("sensor rojo = ");
+  Serial.println(sensor);
+  
+  //Luz verde
+  sensor_1 = analogRead(pinEntrada_1);
+  Serial.print("sensor verde = ");
+  Serial.println(sensor_1);
+  
+  //Luz azul
+  sensor_2 = analogRead(pinEntrada_2);
+  Serial.print("sensor azul = ");
+  Serial.println(sensor_2);
+  delay(500);
+}
