@@ -1,78 +1,105 @@
 package com.app.jaunfix;
 
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.Toast;
 
-import java.util.HashMap;
+import com.app.jaunfix.adaptadores.ListaContactosAdapter;
+import com.app.jaunfix.adaptadores.ValueAdapter;
+import com.app.jaunfix.datamodels.Value;
+import com.app.jaunfix.db.DbContactos;
+import com.app.jaunfix.db.DbHelper;
+import com.app.jaunfix.entidades.Contactos;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.Retrofit;
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
-    private Retrofit retrofit;
-    private Retrointerface retrointerface;
-
-
+    private DatabaseReference rf = FirebaseDatabase.getInstance().getReference().child("Valor");
+    private RecyclerView recyclerView;
+    private ArrayList<Value> arrayList = new ArrayList<>();
+    RecyclerView listaContactos;
+    ArrayList<Contactos> listaArrayContactos;
+    ListaContactosAdapter adapter;
+    FloatingActionButton fb;
+    private Context context;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        findViewById(R.id.NuevoUsuario).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                handleNuevoUsuarioDialog();
-            }
-        });
+        listaContactos= findViewById(R.id.listaPacientes);
+        listaContactos.setLayoutManager(new LinearLayoutManager(this));
+        fb = findViewById(R.id.add);
+        DbContactos dbContactos = new DbContactos(MainActivity.this);
+        listaArrayContactos = new ArrayList<>();
+        adapter = new ListaContactosAdapter(dbContactos.mostrarContactos());
+        listaContactos.setAdapter(adapter);
+
+        recyclerView = (RecyclerView) findViewById(R.id.listaPacientes);
+        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
+        recyclerView.setLayoutManager(layoutManager);
+        upload();
+
 
     }
-    private void handleNuevoUsuarioDialog(){
-        View view = getLayoutInflater().inflate(R.layout.nuevousuario_dialog, null);
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setView(view).show();
+    public boolean onCreateOptionsMenu(Menu menu){
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_principal, menu);
+        return true;
+    }
+    public boolean onOptionsItemSelected(MenuItem item){
+        switch (item.getItemId()){
+            case R.id.menu_nuevo:
+                nuevoRegistro();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
 
-        Button nuevousuarioBtn = view.findViewById(R.id.NuevoUsuario);
-        final EditText nameEdit = view.findViewById(R.id.nameEdit);
-        EditText edadEdit = view.findViewById(R.id.edadgestEdit);
-        EditText fechaEdit = view.findViewById(R.id.fechanacEdit);
-        EditText horaEdit = view.findViewById(R.id.horaEdit);
-
-        nuevousuarioBtn.setOnClickListener(new View.OnClickListener() {
+        }
+    }
+    private void nuevoRegistro(){
+        Add_Case detail = new Add_Case();
+        Bundle args = new Bundle();
+        detail.setArguments(args);
+        detail.show(((Activity)MainActivity.this).getFragmentManager(), "dialog");
+    }
+    public void upload() {
+        rf.addValueEventListener(new ValueEventListener() {
             @Override
-            public void onClick(View view) {
-                HashMap<String,String> map = new HashMap<>();
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                arrayList.clear();
+                for (DataSnapshot ds : dataSnapshot.getChildren()) {
+                    Value relation = ds.getValue(Value.class);
+                    arrayList.add(relation);
+                }
 
-                map.put("name", nameEdit.getText().toString());
-                map.put("edadgest", edadEdit.getText().toString());
-                map.put("fechanac", fechaEdit.getText().toString());
-                map.put("hora", horaEdit.getText().toString());
+                recyclerView.setAdapter(new ValueAdapter(arrayList,context));
 
-                Call<Void> call = Retrointerface.executeNuevousuario(map);
-                call.enqueue(new Callback<Void>() {
-                    @Override
-                    public void onResponse(Call<Void> call, Response<Void> response) {
-                        if (response.code()==200) {
-                            Toast.makeText(MainActivity.this, "Se registró correctamente", Toast.LENGTH_LONG).show();
-                        }else if (response.code() == 400){
-                            Toast.makeText(MainActivity.this,"Ya existe un paciente registrado con esos datos",Toast.LENGTH_LONG).show();
-                        }
+            }
 
-                    }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
 
-                    @Override
-                    public void onFailure(Call<Void> call, Throwable t) {
-                        Toast.makeText(MainActivity.this, t.getMessage(), Toast.LENGTH_LONG).show();
-                    }
-                });
             }
         });
     }
+
 }
