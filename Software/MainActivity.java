@@ -33,7 +33,7 @@ import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
-    private DatabaseReference rf = FirebaseDatabase.getInstance().getReference().child("Valor");
+    private DatabaseReference rf = FirebaseDatabase.getInstance().getReference().child("valor");
     private RecyclerView recyclerView;
     private ArrayList<Value> arrayList = new ArrayList<>();
     RecyclerView listaContactos;
@@ -45,13 +45,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        listaContactos= findViewById(R.id.listaPacientes);
-        listaContactos.setLayoutManager(new LinearLayoutManager(this));
-        fb = findViewById(R.id.add);
-        DbContactos dbContactos = new DbContactos(MainActivity.this);
-        listaArrayContactos = new ArrayList<>();
-        adapter = new ListaContactosAdapter(dbContactos.mostrarContactos());
-        listaContactos.setAdapter(adapter);
 
         recyclerView = (RecyclerView) findViewById(R.id.listaPacientes);
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
@@ -91,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
                     arrayList.add(relation);
                 }
 
-                recyclerView.setAdapter(new ValueAdapter(arrayList,context));
+                recyclerView.setAdapter(new ValueAdapter(arrayList,MainActivity.this));
 
             }
 
